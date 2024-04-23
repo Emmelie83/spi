@@ -7,28 +7,33 @@ import java.util.Scanner;
 import java.util.ServiceLoader;
 
 public class Main {
+    private static final int NUM_CURRENCIES = 4;
 
     public static void main(String[] args) {
         ServiceLoader<CurrencyConverter> loader = ServiceLoader.load(CurrencyConverter.class);
         Scanner scanner = new Scanner(System.in);
 
-        CurrencyConverter converter = chooseConverter(scanner, loader);
-        if (converter != null) {
-            double amount = chooseAmount(scanner);
-            String toCurrency = chooseToCurrency(scanner, loader);
-
-            double convertedAmount = converter.convert(amount, toCurrency);
-            System.out.println("Converted amount: " + convertedAmount + " " + toCurrency);
-        } else {
-            System.out.println("Invalid choice.");
+        while (true) {
+            CurrencyConverter converter = chooseConverter(scanner, loader);
+            if (converter != null) {
+                double amount = chooseAmount(scanner);
+                String toCurrency = chooseToCurrency(scanner, loader);
+                double convertedAmount = converter.convert(amount, toCurrency);
+                System.out.println("Converted amount: " + convertedAmount + " " + toCurrency);
+            } else {
+                System.out.println("Invalid choice.");
+            }
+            System.out.println("Press 'q' and enter to quit or just enter to continue");
+            String choice = scanner.nextLine();
+            if (choice.equalsIgnoreCase("q")) break;
         }
-
         scanner.close();
     }
 
+
     private static CurrencyConverter chooseConverter(Scanner scanner, ServiceLoader<CurrencyConverter> loader) {
         printConverterMenu(loader);
-        int choice = readIntInput(scanner);
+        int choice = readInputInRange(scanner, 1, NUM_CURRENCIES);
         return getConverterByChoice(choice, loader);
     }
 
@@ -52,13 +57,19 @@ public class Main {
     }
 
     private static double chooseAmount(Scanner scanner) {
-        System.out.println("Enter the amount to convert:");
-        return readDoubleInput(scanner);
+        while (true) {
+            System.out.println("Enter the amount to convert:");
+            double amount = readDoubleInput(scanner);
+            if (amount > 0) {
+                return amount;
+            }
+            System.out.println("The amount must be greater than 0.");
+        }
     }
 
     private static String chooseToCurrency(Scanner scanner, ServiceLoader<CurrencyConverter> loader) {
         printToCurrencyMenu(loader);
-        int choice = readIntInput(scanner);
+        int choice = readInputInRange(scanner, 1, NUM_CURRENCIES);
         return getCurrencyByChoice(choice);
     }
 
@@ -73,10 +84,17 @@ public class Main {
 
     private static String getCurrencyByChoice(int choice) {
         String[] currencies = {"GBP", "USD", "EUR", "SEK"};
-        if (choice >= 1 && choice <= currencies.length) {
-            return currencies[choice - 1];
+        return currencies[choice - 1];
+    }
+
+    private static int readInputInRange(Scanner scanner, int min, int max) {
+        while (true) {
+            int choice = readIntInput(scanner);
+            if (choice >= min && choice <= max) {
+                return choice;
+            }
+            System.out.println("Invalid input. Please enter a number between " + min + " and " + max + ".");
         }
-        return "";
     }
 
     private static int readIntInput(Scanner scanner) {
